@@ -1,26 +1,37 @@
-name: Download Bazelisk
+name: Download Bazelisk (Reusable)
 
 on:
-  # This makes the workflow reusable
+  # Makes this workflow reusable by other workflows/repos
   workflow_call:
     inputs:
       bazel_version:
-        description: "Bazel version to use (example: 7.0.2 or latest)"
+        description: "Requested Bazel version (e.g. 7.0.2, latest)"
         required: false
         type: string
         default: "latest"
 
       verify_install:
-        description: "Whether to print bazel version after install"
+        description: "Print bazel --version after install"
         required: false
         type: boolean
         default: true
+
+    # Outputs exposed to the calling workflow
+    outputs:
+      resolved_bazel_version:
+        description: "Actual Bazel version resolved by Bazelisk"
+        value: ${{ jobs.setup-bazelisk.outputs.bazel_version }}
 
 jobs:
   setup-bazelisk:
     runs-on: ubuntu-latest
 
+    # Job-level outputs
+    outputs:
+      bazel_version: ${{ steps.detect-version.outputs.version }}
+
     steps:
+      # Download Bazelisk binary
       - name: Download Bazelisk
         run: |
           curl -L https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-amd64 \
@@ -28,10 +39,19 @@ jobs:
           chmod +x bazelisk
           sudo mv bazelisk /usr/local/bin/bazel
 
-      - name: Set Bazel version (optional)
-        # Bazelisk respects USE_BAZEL_VERSION
-        run: echo "USE_BAZEL_VERSION=${{ inputs.bazel_version }}" >> $GITHUB_ENV
+      # Set requested Bazel version (used if .bazelversion not present)
+      - name: Set requested Bazel version
+        run: |
+          echo "USE_BAZEL_VERSION=${{ inputs.bazel_version }}" >> $GITHUB_ENV
 
+      # Detect actual Bazel version Bazelisk resolved
+      - name: Detect Bazel version
+        id: detect-version
+        run: |
+          VERSION=$(bazel --version | awk '{print $2}')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      # Optional verification step
       - name: Verify Bazel installation
         if: ${{ inputs.verify_install }}
         run: bazel --version
