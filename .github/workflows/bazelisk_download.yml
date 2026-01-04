@@ -58,3 +58,8 @@ jobs:
       - name: Verify Bazel installation
         if: ${{ inputs.verify_install }}
         run: bazel --version
+      - name: Use secret safely        
+        env:
+            TOKEN: ${{ secrets.MY_SECRET_TOKEN }}
+        run: |
+            echo "Token length: ${#TOKEN}"
