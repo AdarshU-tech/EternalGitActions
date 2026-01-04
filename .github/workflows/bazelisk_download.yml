@@ -3,6 +3,9 @@ name: Download Bazelisk (Reusable)
 on:
   # Makes this workflow reusable by other workflows/repos
   workflow_call:
+    secrets:
+      MY_SECRET_TOKEN:
+        required: true
     inputs:
       bazel_version:
         description: "Requested Bazel version (e.g. 7.0.2, latest)"
