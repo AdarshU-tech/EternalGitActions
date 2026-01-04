@@ -1,0 +1,24 @@
+name: Download Bazelisk
+
+on:
+  workflow_call:
+    inputs:
+      bazelisk-version:
+        required: false
+        type: string
+        default: "latest"
+
+jobs:
+  setup-bazelisk:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download Bazelisk
+        run: |
+          curl -L https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-amd64 \
+            -o bazelisk
+          chmod +x bazelisk
+          sudo mv bazelisk /usr/local/bin/bazel
+
+      - name: Verify Bazelisk
+        run: bazel --version
