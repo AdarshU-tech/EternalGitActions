@@ -1,12 +1,20 @@
 name: Download Bazelisk
 
 on:
+  # This makes the workflow reusable
   workflow_call:
     inputs:
-      bazelisk-version:
+      bazel_version:
+        description: "Bazel version to use (example: 7.0.2 or latest)"
         required: false
         type: string
         default: "latest"
+
+      verify_install:
+        description: "Whether to print bazel version after install"
+        required: false
+        type: boolean
+        default: true
 
 jobs:
   setup-bazelisk:
@@ -20,5 +28,10 @@ jobs:
           chmod +x bazelisk
           sudo mv bazelisk /usr/local/bin/bazel
 
-      - name: Verify Bazelisk
+      - name: Set Bazel version (optional)
+        # Bazelisk respects USE_BAZEL_VERSION
+        run: echo "USE_BAZEL_VERSION=${{ inputs.bazel_version }}" >> $GITHUB_ENV
+
+      - name: Verify Bazel installation
+        if: ${{ inputs.verify_install }}
         run: bazel --version
